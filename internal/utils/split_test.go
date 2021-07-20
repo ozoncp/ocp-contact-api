@@ -49,15 +49,13 @@ func TestSplitFullBatches(t *testing.T) {
 	}
 
 	if len(val) != expectedCount {
-		t.Errorf("Expected %v slices, received %v", batchLen, val)
-		return
+		t.Fatalf("Expected %v slices, received %v", batchLen, val)
 	}
 
 	for i := 0; i < expectedCount; i++ {
 		expectedSlice := source[i * batchLen:(i+1) * batchLen]
 		if !compareSlices(expectedSlice, val[i]) {
-			t.Errorf("Expected %v, received %v", expectedSlice, val[i])
-			return
+			t.Fatalf("Expected %v, received %v", expectedSlice, val[i])
 		}
 	}
 }
@@ -73,8 +71,7 @@ func TestSplitPartialBatches(t *testing.T) {
 	}
 
 	if len(val) != expectedCount {
-		t.Errorf("Expected %v slices, received %v", batchLen, val)
-		return
+		t.Fatalf("Expected %v slices, received %v", batchLen, val)
 	}
 
 	for i := 0; i < expectedCount; i++ {
@@ -85,8 +82,18 @@ func TestSplitPartialBatches(t *testing.T) {
 		}
 		expectedSlice := source[first:last]
 		if !compareSlices(expectedSlice, val[i]) {
-			t.Errorf("Expected %v, received %v", expectedSlice, val[i])
-			return
+			t.Fatalf("Expected %v, received %v", expectedSlice, val[i])
 		}
+	}
+}
+
+func TestSplitUnchanges(t *testing.T) {
+	source := []string{"one", "two", "three", "four", "five", "six"}
+	res, _ := Split(source, 3)
+	baseVal := res[0][0]
+	source[0] = "WOW!"
+	newVal := res[0][0]
+	if baseVal != newVal {
+		t.Errorf("res[0][0] is <%v>, <%v> expected", newVal, baseVal)
 	}
 }

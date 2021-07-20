@@ -15,11 +15,11 @@ func Split(source []string, batchLen int) ([][]string, error) {
 	result := make([][]string, batchesCount)
 
 	for i := 0; i < fullBatchesCount; i++ {
-		result[i] = source[i * batchLen:(i + 1) * batchLen]
+		result[i] = append([]string{}, source[i * batchLen:(i + 1) * batchLen]...)
 	}
 
 	if fullBatchesCount != batchesCount {
-		result[fullBatchesCount] = source[fullBatchesCount * batchLen:sourceLen]
+		result[fullBatchesCount] = append([]string{}, source[fullBatchesCount * batchLen:sourceLen]...)
 	}
 
 	return result, nil
