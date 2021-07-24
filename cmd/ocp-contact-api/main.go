@@ -20,37 +20,31 @@ func main() {
 	file.WriteString("config file content")
 	file.Close()
 
-	readConfig := func() {
+	readConfig := func() (string, error){
 		file, err := os.Open(configPath)
 		if err != nil {
-			fmt.Println(err)
-			return
+			return "", err
 		}
 		fmt.Printf("File %v was opened\n", configPath)
-		defer func() {
-			if err := file.Close(); err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Printf("File %v was closed\n", configPath)
-			}
-		}()
+
+		defer file.Close()
+
 		bytes, err := ioutil.ReadAll(file)
 		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Printf(" Read content: %v\n", string(bytes))
+			return "", err
 		}
+
+		return string(bytes), nil
 	}
 
 	for i := 0; i < 10; i++{
-		readConfig()
+		config, err := readConfig()
+		if err != nil {
+			fmt.Printf("Cannot read config by path %v, error %v\n", configPath, err)
+			return
+		}
+		fmt.Printf(" Read content: %v\n", config)
 	}
 
-	defer func(){
-		if err := os.Remove(configPath); err == nil {
-			fmt.Printf("File %v was removed\n", configPath)
-		} else {
-			fmt.Printf("File %v wasn't removed, error %v\n", configPath, err)
-		}
-	}()
+	defer os.Remove(configPath)
 }
