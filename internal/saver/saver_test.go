@@ -40,7 +40,7 @@ var _ = Describe("Saver", func() {
 			BeforeEach(func() {
 				capacity = 0
 				s = saver.NewSaver(capacity, mockFlusher, timeout)
-				mockFlusher.EXPECT().Flush(contacts).Times(1)
+				mockFlusher.EXPECT().Flush(contacts).MinTimes(1)
 			})
 			It("flushes all contacts after close", func() {
 				defer s.Close()
@@ -53,10 +53,40 @@ var _ = Describe("Saver", func() {
 			BeforeEach(func() {
 				capacity = uint(len(contacts) / 2)
 				s = saver.NewSaver(capacity, mockFlusher, timeout)
-				mockFlusher.EXPECT().Flush(gomock.Any()).Times(1)
+				mockFlusher.EXPECT().Flush(gomock.Any()).MinTimes(1)
 			})
 			It("flushes all contacts", func() {
 				defer s.Close()
+				for _, contact := range contacts {
+					s.Save(contact)
+				}
+			})
+		})
+		When("save after channel was closed", func() {
+			BeforeEach(func() {
+				capacity = uint(len(contacts))
+				s = saver.NewSaver(capacity, mockFlusher, timeout)
+				mockFlusher.EXPECT().Flush(gomock.Any()).MinTimes(1)
+			})
+			It("flushes all contacts", func() {
+				for _, contact := range contacts {
+					s.Save(contact)
+				}
+				s.Close()
+
+				s.Save(contacts[0])
+				s.Save(contacts[0])
+				s.Save(contacts[0])
+			})
+		})
+		When("closed channel before data was received", func() {
+			BeforeEach(func() {
+				capacity = uint(len(contacts))
+				s = saver.NewSaver(capacity, mockFlusher, timeout)
+				mockFlusher.EXPECT().Flush([]models.Contact{}).Times(1)
+			})
+			It("successfully stopped", func() {
+				s.Close()
 				for _, contact := range contacts {
 					s.Save(contact)
 				}
