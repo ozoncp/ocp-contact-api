@@ -2,49 +2,45 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"net"
 	"os"
+	"time"
+
+	"github.com/ozoncp/ocp-contact-api/internal/api"
+	desc "github.com/ozoncp/ocp-contact-api/pkg/ocp-contact-api"
+
+	"github.com/rs/zerolog"
+	"google.golang.org/grpc"
 )
+
+const (
+	grpcPort = ":8002"
+)
+
+func runGrpc(log zerolog.Logger) error {
+	listen, err := net.Listen("tcp", grpcPort)
+	if err != nil {
+		log.Fatal().Err(err).Msgf("failed to listen port %v: %v", grpcPort, err)
+	}
+	s := grpc.NewServer()
+	desc.RegisterOcpContactApiServer(s, api.NewOcpContactApiServer(log))
+
+	//fmt.Printf("Server listening on %s\n", *grpcEndpoint)
+	if err := s.Serve(listen); err != nil {
+		log.Fatal().Err(err).Msgf("failed to serve: %v", err)
+	}
+
+	return nil
+}
 
 func main() {
 	fmt.Println("This is an Ozon Contact API")
-	const configPath string = "config.cfg"
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-	fmt.Printf("Creating a file %v\n", configPath)
-	file, err := os.Create(configPath)
-	if err != nil {
-		fmt.Printf("Cannot create file by path %v, error %v\n", configPath, err)
-		return
+	log := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Logger()
+
+	if err := runGrpc(log); err != nil {
+		log.Fatal().Err(err)
 	}
 
-	file.WriteString("config file content")
-	file.Close()
-
-	readConfig := func() (string, error){
-		file, err := os.Open(configPath)
-		if err != nil {
-			return "", err
-		}
-		fmt.Printf("File %v was opened\n", configPath)
-
-		defer file.Close()
-
-		bytes, err := ioutil.ReadAll(file)
-		if err != nil {
-			return "", err
-		}
-
-		return string(bytes), nil
-	}
-
-	for i := 0; i < 10; i++{
-		config, err := readConfig()
-		if err != nil {
-			fmt.Printf("Cannot read config by path %v, error %v\n", configPath, err)
-			return
-		}
-		fmt.Printf(" Read content: %v\n", config)
-	}
-
-	defer os.Remove(configPath)
 }

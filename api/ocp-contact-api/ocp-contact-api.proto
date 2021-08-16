@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
+
+package ocp.contact.api;
+
+option go_package = "github.com/ozoncp/ocp-contact-api/pkg/ocp-contact-api;ocp_contact_api";
+
+service OcpContactApi {
+
+  // Returns a list of the contact
+  rpc ListContactsV1(ListContactsV1Request) returns (ListContactsV1Response) {
+    option (google.api.http) = {
+      get: "/v1/contacts"
+    };
+  }
+
+  // Returns contact description by id
+  rpc DescribeContactV1(DescribeContactV1Request) returns (DescribeContactV1Response) {
+    option (google.api.http) = {
+      get: "/v1/contacts/{contactId}"
+    };
+  }
+
+  // Create a new contact
+  rpc CreateContactV1(CreateContactV1Request) returns (CreateContactV1Response) {
+    option (google.api.http) = {
+      post: "/v1/contacts"
+      body: "*"
+    };
+  }
+
+  // Remove contact by id
+  rpc RemoveContactV1(RemoveContactV1Request) returns (RemoveContactV1Response) {
+    option (google.api.http) = {
+      delete: "/v1/contacts/{contactId}"
+    };
+  }
+}
+
+message ListContactsV1Request {
+  uint64 limit = 1;
+  uint64 offset = 2;
+}
+
+message ListContactsV1Response {
+  repeated Contact contacts = 1;
+}
+
+message CreateContactV1Request {
+  uint64 userId = 1;
+  uint64 type = 2;
+  string text = 3;
+}
+
+message CreateContactV1Response {
+  uint64 contactId = 1;
+}
+
+message RemoveContactV1Request {
+  uint64 contactId = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message RemoveContactV1Response {
+  bool result = 1;
+}
+
+message DescribeContactV1Request {
+  uint64 contactId = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message DescribeContactV1Response {
+  Contact contact = 1;
+}
+
+message Contact {
+  uint64 id = 1;
+  uint64 userId = 2;
+  uint64 type = 3;
+  string text = 4;
+}
