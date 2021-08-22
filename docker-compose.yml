@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:latest
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  ocp-contact-api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    links:
+      - postgres
+    ports:
+      - "8002:8002" # grpc
+
+volumes:
+  pgdata:

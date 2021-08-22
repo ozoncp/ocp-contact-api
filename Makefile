@@ -2,6 +2,32 @@ GOOS := $(shell go env GOOS)
 ifeq ($(GOOS),windows)
 	EXT := .exe
 endif
+
+.PHONY: deploy
+deploy: vendor-proto .generate .build .compose-build .compose-up .migrate
+
+.PHONY: start
+start: .compose-build .compose-up .migrate
+
+.PHONY: .compose-build
+.compose-build:
+	docker-compose build
+
+.PHONY: .compose-up
+.compose-up:
+	docker compose up -d
+
+.PHONY: stop
+stop: .compose-stop
+
+.PHONY: .compose-stop
+.compose-stop:
+	docker compose stop
+
+.PHONY: .migrate
+.migrate:
+	 goose -dir ./migrations postgres "postgres://postgres:postgres@127.0.0.1:5432/postgres?sslmode=disable" up
+
 .PHONY: build
 build: vendor-proto .generate .build
 
@@ -34,7 +60,7 @@ install: build .install
 
 .PHONY: .install
 install:
-		go install cmd/grpc-server/main.go
+		go install cmd/ocp-contact-api/main.go
 
 .PHONY: vendor-proto
 vendor-proto: .vendor-proto

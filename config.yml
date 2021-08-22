@@ -1,0 +1,16 @@
+project:
+  name: "OCP Contact Api"
+  author: "Evgeniy Chekunov"
+  version: "0.0.1"
+
+grpc:
+  address: ":8002"
+
+database:
+  host: "postgres"
+  port: "5432"
+  user: "postgres"
+  password: "postgres"
+  database: "postgres"
+  ssl: "disable"
+  driver: "postgres"

@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -35,45 +36,74 @@ func (m *MockRepo) EXPECT() *MockRepoMockRecorder {
 }
 
 // AddContacts mocks base method.
-func (m *MockRepo) AddContacts(arg0 []models.Contact) error {
+func (m *MockRepo) AddContacts(arg0 context.Context, arg1 []models.Contact) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddContacts", arg0)
+	ret := m.ctrl.Call(m, "AddContacts", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddContacts indicates an expected call of AddContacts.
-func (mr *MockRepoMockRecorder) AddContacts(arg0 interface{}) *gomock.Call {
+func (mr *MockRepoMockRecorder) AddContacts(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddContacts", reflect.TypeOf((*MockRepo)(nil).AddContacts), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddContacts", reflect.TypeOf((*MockRepo)(nil).AddContacts), arg0, arg1)
+}
+
+// CreateContact mocks base method.
+func (m *MockRepo) CreateContact(arg0 context.Context, arg1 models.Contact) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateContact", arg0, arg1)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateContact indicates an expected call of CreateContact.
+func (mr *MockRepoMockRecorder) CreateContact(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateContact", reflect.TypeOf((*MockRepo)(nil).CreateContact), arg0, arg1)
 }
 
 // DescribeContact mocks base method.
-func (m *MockRepo) DescribeContact(arg0 uint64) (*models.Contact, error) {
+func (m *MockRepo) DescribeContact(arg0 context.Context, arg1 uint64) (*models.Contact, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DescribeContact", arg0)
+	ret := m.ctrl.Call(m, "DescribeContact", arg0, arg1)
 	ret0, _ := ret[0].(*models.Contact)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // DescribeContact indicates an expected call of DescribeContact.
-func (mr *MockRepoMockRecorder) DescribeContact(arg0 interface{}) *gomock.Call {
+func (mr *MockRepoMockRecorder) DescribeContact(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeContact", reflect.TypeOf((*MockRepo)(nil).DescribeContact), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeContact", reflect.TypeOf((*MockRepo)(nil).DescribeContact), arg0, arg1)
 }
 
 // ListContacts mocks base method.
-func (m *MockRepo) ListContacts(arg0, arg1 uint64) ([]models.Contact, error) {
+func (m *MockRepo) ListContacts(arg0 context.Context, arg1, arg2 uint64) ([]models.Contact, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListContacts", arg0, arg1)
+	ret := m.ctrl.Call(m, "ListContacts", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]models.Contact)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListContacts indicates an expected call of ListContacts.
-func (mr *MockRepoMockRecorder) ListContacts(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockRepoMockRecorder) ListContacts(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListContacts", reflect.TypeOf((*MockRepo)(nil).ListContacts), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListContacts", reflect.TypeOf((*MockRepo)(nil).ListContacts), arg0, arg1, arg2)
+}
+
+// RemoveContact mocks base method.
+func (m *MockRepo) RemoveContact(arg0 context.Context, arg1 uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveContact", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveContact indicates an expected call of RemoveContact.
+func (mr *MockRepoMockRecorder) RemoveContact(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveContact", reflect.TypeOf((*MockRepo)(nil).RemoveContact), arg0, arg1)
 }
