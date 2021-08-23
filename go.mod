@@ -3,6 +3,7 @@ module github.com/ozoncp/ocp-contact-api
 go 1.16
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/Masterminds/squirrel v1.5.0
 	github.com/envoyproxy/protoc-gen-validate v0.6.1
 	github.com/golang/glog v1.0.0 // indirect
