@@ -17,3 +17,8 @@ database:
 
 request:
   batchsize: 5
+
+kafka:
+  topic: "contact"
+  brokers:
+    - "kafka:9092"

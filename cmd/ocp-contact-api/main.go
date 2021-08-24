@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/ozoncp/ocp-contact-api/internal/producer"
 	"github.com/ozoncp/ocp-contact-api/internal/repo"
 	"net"
 	"os"
@@ -17,7 +18,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func runGrpc(config *config.Config, log zerolog.Logger) error {
+func runGrpc(config *config.Config, prod producer.Producer, log zerolog.Logger) error {
 	listen, err := net.Listen("tcp", config.Grpc.Address)
 	if err != nil {
 		log.Fatal().Err(err).Msgf("failed to listen port %v: %v", config.Grpc.Address, err)
@@ -46,7 +47,7 @@ func runGrpc(config *config.Config, log zerolog.Logger) error {
 	// start Grpc server
 	s := grpc.NewServer()
 	newRepo := repo.NewRepo(db)
-	desc.RegisterOcpContactApiServer(s, api.NewOcpContactApiServer(newRepo, config.Request.BatchSize, log))
+	desc.RegisterOcpContactApiServer(s, api.NewOcpContactApiServer(newRepo, prod, config.Request.BatchSize, log))
 
 	if err := s.Serve(listen); err != nil {
 		log.Fatal().Err(err).Msgf("failed to serve: %v", err)
@@ -67,7 +68,10 @@ func main() {
 		return
 	}
 
-	if err := runGrpc(cfg, log); err != nil {
+	prod := producer.NewProducer(cfg.Kafka.Topic, cfg.Kafka.Brokers, log)
+	log.Info().Msg("start producer")
+
+	if err := runGrpc(cfg, prod, log); err != nil {
 		log.Fatal().Err(err)
 	}
 

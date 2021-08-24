@@ -29,11 +29,17 @@ type Project struct {
 	Version string `yaml:"version"`
 }
 
+type Kafka struct {
+	Topic   string   `yaml:"topic"`
+	Brokers []string `yaml:"brokers"`
+}
+
 type Config struct {
 	Project  Project  `yaml:"project"`
 	Grpc     Grpc     `yaml:"grpc"`
 	Database Database `yaml:"database"`
-	Request Request   `yaml:"request"`
+	Request  Request  `yaml:"request"`
+	Kafka    Kafka    `yaml:"kafka"`
 }
 
 func Read(path string) (*Config, error) {

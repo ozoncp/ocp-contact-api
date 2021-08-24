@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"github.com/ozoncp/ocp-contact-api/internal/models"
+	"github.com/ozoncp/ocp-contact-api/internal/producer"
 	"github.com/ozoncp/ocp-contact-api/internal/repo"
 	"github.com/ozoncp/ocp-contact-api/internal/utils"
 	desc "github.com/ozoncp/ocp-contact-api/pkg/ocp-contact-api"
@@ -10,17 +11,24 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"time"
 )
 
 type contactApiServer struct {
 	repo repo.Repo
+	prod producer.Producer
 	batchSize int
 	log zerolog.Logger
 	desc.UnimplementedOcpContactApiServer
 }
 
-func NewOcpContactApiServer(repo repo.Repo, batchSize int, log zerolog.Logger) desc.OcpContactApiServer {
-	return &contactApiServer{repo: repo, batchSize: batchSize, log: log}
+func NewOcpContactApiServer(
+	repo repo.Repo,
+	prod producer.Producer,
+	batchSize int,
+	log zerolog.Logger,
+) desc.OcpContactApiServer {
+	return &contactApiServer{repo: repo, prod: prod, batchSize: batchSize, log: log}
 }
 
 func (s *contactApiServer) ListContactsV1(
@@ -98,7 +106,7 @@ func (s *contactApiServer) CreateContactV1(
 	contactId, err := s.repo.CreateContact(context, contact)
 
 	if err != nil {
-		log.Error().Err(err).Msg("create contact failed")
+		s.log.Error().Err(err).Msg("create contact failed")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -107,6 +115,16 @@ func (s *contactApiServer) CreateContactV1(
 	}
 
 	s.log.Info().Msgf("contact was created with id: %v", contactId)
+
+	event := producer.EventMessage{
+		Id:        contact.Id,
+		Action:    producer.Create.String(),
+		Timestamp: time.Now().Unix(),
+	}
+	msg := producer.CreateMessage(producer.Create, event)
+	if err = s.prod.Send(msg); err != nil {
+		s.log.Error().Err(err).Msgf("failed send message to kafka")
+	}
 
 	return response, nil
 }
@@ -129,6 +147,17 @@ func (s *contactApiServer) RemoveContactV1(
 	}
 
 	s.log.Info().Msgf("remove contact with id %v was removed", req.ContactId)
+
+	event := producer.EventMessage{
+		Id:        req.ContactId,
+		Action:    producer.Remove.String(),
+		Timestamp: time.Now().Unix(),
+	}
+	msg := producer.CreateMessage(producer.Remove, event)
+	if err := s.prod.Send(msg); err != nil {
+		s.log.Error().Err(err).Msgf("failed send message to kafka")
+	}
+
 	return &desc.RemoveContactV1Response{Result: true}, nil
 }
 
@@ -142,6 +171,16 @@ func (s *contactApiServer) UpdateContactV1(
 	if err := s.repo.UpdateContact(ctx, contact); err != nil {
 		log.Error().Err(err).Msgf("update contact with id %v failed", req.Contact.Id)
 		return &desc.UpdateContactV1Response{Updated: false}, err
+	}
+
+	event := producer.EventMessage{
+		Id:        contact.Id,
+		Action:    producer.Update.String(),
+		Timestamp: time.Now().Unix(),
+	}
+	msg := producer.CreateMessage(producer.Update, event)
+	if err := s.prod.Send(msg); err != nil {
+		s.log.Error().Err(err).Msgf("failed send message to kafka")
 	}
 
 	return &desc.UpdateContactV1Response{Updated: true}, nil
