@@ -1,13 +1,15 @@
 package flusher
 
 import (
+	"context"
+
 	"github.com/ozoncp/ocp-contact-api/internal/models"
 	"github.com/ozoncp/ocp-contact-api/internal/repo"
 	"github.com/ozoncp/ocp-contact-api/internal/utils"
 )
 
 type Flusher interface {
-	Flush(contacts []models.Contact) ([]models.Contact, error)
+	Flush(ctx context.Context, contacts []models.Contact) ([]models.Contact, error)
 }
 
 type flusher struct {
@@ -25,13 +27,13 @@ func NewFlusher(
 	}
 }
 
-func (f *flusher) Flush(contacts []models.Contact) ([]models.Contact, error) {
+func (f *flusher) Flush(ctx context.Context, contacts []models.Contact) ([]models.Contact, error) {
 	chunks, err := utils.Split(contacts, f.chunkSize)
 	if err != nil {
 		return contacts, err
 	}
 	for index := range chunks {
-		if err := f.contactRepo.AddContacts(chunks[index]); err != nil {
+		if err := f.contactRepo.AddContacts(ctx, chunks[index]); err != nil {
 			return contacts[f.chunkSize * index:], err
 		}
 	}

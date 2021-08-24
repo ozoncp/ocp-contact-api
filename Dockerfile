@@ -33,6 +33,7 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /home/developer/go/src/github.com/ozoncp/ocp-contact-api/bin/ocp-contact-api .
+COPY --from=builder /home/developer/go/src/github.com/ozoncp/ocp-contact-api/config.yml .
 RUN chown root:root ocp-contact-api
 EXPOSE 8002
 CMD ["./ocp-contact-api"]

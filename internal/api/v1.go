@@ -2,49 +2,111 @@ package api
 
 import (
 	"context"
-
+	"github.com/ozoncp/ocp-contact-api/internal/models"
+	"github.com/ozoncp/ocp-contact-api/internal/repo"
 	desc "github.com/ozoncp/ocp-contact-api/pkg/ocp-contact-api"
-
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type contactApiServer struct {
+	repo repo.Repo
 	log zerolog.Logger
 	desc.UnimplementedOcpContactApiServer
 }
 
-func NewOcpContactApiServer(log zerolog.Logger) desc.OcpContactApiServer {
-	return &contactApiServer{log: log}
+func NewOcpContactApiServer(repo repo.Repo, log zerolog.Logger) desc.OcpContactApiServer {
+	return &contactApiServer{repo: repo, log: log}
 }
 
 func (s *contactApiServer) ListContactsV1(
 	context context.Context,
 	req *desc.ListContactsV1Request,
 ) (*desc.ListContactsV1Response, error) {
-	s.log.Info().Msg("list")
-	return &desc.ListContactsV1Response{}, nil
+	repoContacts, err := s.repo.ListContacts(context, req.Limit, req.Offset)
+	if err != nil {
+		log.Error().Err(err).Msg("getting list contacts from the repo failed")
+		return nil, status.Error(codes.Internal, "getting list contacts from the repo failed")
+	}
+
+	s.log.Info().Msgf("request list contacts: %v", len(repoContacts))
+
+	contacts := make([]*desc.Contact, 0, len(repoContacts))
+	for _, repoContact := range repoContacts {
+		contact := &desc.Contact{
+			Id:     repoContact.Id,
+			UserId: repoContact.UserId,
+			Type:   repoContact.Type,
+			Text:   repoContact.Text,
+		}
+
+		contacts = append(contacts, contact)
+	}
+
+	response := &desc.ListContactsV1Response{
+		Contacts: contacts,
+	}
+
+	return response, nil
 }
 
 func (s *contactApiServer) DescribeContactV1(
 	context context.Context,
 	req *desc.DescribeContactV1Request,
 ) (*desc.DescribeContactV1Response, error) {
+	s.log.Info().Msgf("describe contact with id: %v", req.ContactId)
 	if err := req.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	s.log.Info().Msgf("describe contact with id: %v", req.ContactId)
-	return &desc.DescribeContactV1Response{}, nil
+
+	contact, err := s.repo.DescribeContact(context, req.ContactId)
+	if err != nil {
+		log.Error().Err(err).Msg("describe contact failed")
+		return nil, status.Error(codes.NotFound, err.Error())
+	}
+	s.log.Info().Msgf("describe contact with id %v was successfully done", req.ContactId)
+	response := &desc.DescribeContactV1Response{
+		Contact: &desc.Contact{
+			Id:     contact.Id,
+			UserId: contact.UserId,
+			Type:   contact.Type,
+			Text:   contact.Text,
+		},
+	}
+
+	return response, nil
 }
 
 func (s *contactApiServer) CreateContactV1(
 	context context.Context,
 	req *desc.CreateContactV1Request,
 ) (*desc.CreateContactV1Response, error) {
-	s.log.Info().Msgf("create contact with userId: %v, type: %v, text: %v",
+
+	s.log.Info().Msgf("creating contact with userId: %v, type: %v, text: %v",
 		req.UserId, req.Type, req.Text)
-	return &desc.CreateContactV1Response{}, nil
+
+	contact := models.Contact{
+		UserId: req.UserId,
+		Type:   req.Type,
+		Text:   req.Text,
+	}
+
+	contactId, err := s.repo.CreateContact(context, contact)
+
+	if err != nil {
+		log.Error().Err(err).Msg("create contact failed")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	response := &desc.CreateContactV1Response{
+		ContactId: contactId,
+	}
+
+	s.log.Info().Msgf("contact was created with id: %v", contactId)
+
+	return response, nil
 }
 
 func (s *contactApiServer) RemoveContactV1(
@@ -54,6 +116,16 @@ func (s *contactApiServer) RemoveContactV1(
 	if err := req.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	s.log.Info().Msgf("remove contact with id: %v", req.ContactId)
-	return &desc.RemoveContactV1Response{}, nil
+
+	err := s.repo.RemoveContact(context, req.ContactId)
+
+	if err != nil {
+		log.Error().Err(err).Msgf("remove contact with id %v failed", req.ContactId)
+		return &desc.RemoveContactV1Response{
+			Result: false,
+		}, nil
+	}
+
+	s.log.Info().Msgf("remove contact with id %v was removed", req.ContactId)
+	return &desc.RemoveContactV1Response{Result: true}, nil
 }
