@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/ozoncp/ocp-contact-api/internal/metrics"
 	"github.com/ozoncp/ocp-contact-api/internal/producer"
 	"github.com/ozoncp/ocp-contact-api/internal/repo"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net"
+	"net/http"
 	"os"
 	"time"
 
@@ -56,6 +59,21 @@ func runGrpc(config *config.Config, prod producer.Producer, log zerolog.Logger) 
 	return nil
 }
 
+func runMetricsServer(uri string, port string, log zerolog.Logger) error {
+	mux := http.NewServeMux()
+	mux.Handle(uri, promhttp.Handler())
+
+	srv := &http.Server{
+		Addr:    port,
+		Handler: mux,
+	}
+	metrics.RegisterMetrics()
+	log.Info().Msg("Metrics server started")
+
+	return srv.ListenAndServe()
+}
+
+
 func main() {
 	const configPath string = "./config.yml"
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
@@ -71,7 +89,9 @@ func main() {
 	prod := producer.NewProducer(cfg.Kafka.Topic, cfg.Kafka.Brokers, log)
 	log.Info().Msg("start producer")
 
-	if err := runGrpc(cfg, prod, log); err != nil {
+	go runMetricsServer(cfg.Prometheus.Uri, cfg.Prometheus.Port, log)
+
+	if err = runGrpc(cfg, prod, log); err != nil {
 		log.Fatal().Err(err)
 	}
 

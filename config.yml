@@ -18,6 +18,10 @@ database:
 request:
   batchsize: 5
 
+prometheus:
+  uri: "/metrics"
+  port: ":9100"
+
 kafka:
   topic: "contact"
   brokers:

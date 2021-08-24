@@ -50,5 +50,13 @@ services:
       - zookeeper
     restart: on-failure
 
+  prometheus:
+    image: prom/prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+
 volumes:
   pgdata:

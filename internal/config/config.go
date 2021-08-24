@@ -34,12 +34,18 @@ type Kafka struct {
 	Brokers []string `yaml:"brokers"`
 }
 
+type Prometheus struct {
+	Uri  string `yaml:"uri"`
+	Port string `yaml:"port"`
+}
+
 type Config struct {
 	Project  Project  `yaml:"project"`
 	Grpc     Grpc     `yaml:"grpc"`
 	Database Database `yaml:"database"`
 	Request  Request  `yaml:"request"`
 	Kafka    Kafka    `yaml:"kafka"`
+	Prometheus Prometheus `yaml:"prometheus"`
 }
 
 func Read(path string) (*Config, error) {

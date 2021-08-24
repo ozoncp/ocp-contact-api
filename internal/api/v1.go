@@ -6,6 +6,7 @@ import (
 	"github.com/ozoncp/ocp-contact-api/internal/producer"
 	"github.com/ozoncp/ocp-contact-api/internal/repo"
 	"github.com/ozoncp/ocp-contact-api/internal/utils"
+	"github.com/ozoncp/ocp-contact-api/internal/metrics"
 	desc "github.com/ozoncp/ocp-contact-api/pkg/ocp-contact-api"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -116,11 +117,14 @@ func (s *contactApiServer) CreateContactV1(
 
 	s.log.Info().Msgf("contact was created with id: %v", contactId)
 
+	metrics.CreateCounterInc()
+
 	event := producer.EventMessage{
 		Id:        contact.Id,
 		Action:    producer.Create.String(),
 		Timestamp: time.Now().Unix(),
 	}
+
 	msg := producer.CreateMessage(producer.Create, event)
 	if err = s.prod.Send(msg); err != nil {
 		s.log.Error().Err(err).Msgf("failed send message to kafka")
@@ -148,6 +152,8 @@ func (s *contactApiServer) RemoveContactV1(
 
 	s.log.Info().Msgf("remove contact with id %v was removed", req.ContactId)
 
+	metrics.RemoveCounterInc()
+
 	event := producer.EventMessage{
 		Id:        req.ContactId,
 		Action:    producer.Remove.String(),
@@ -172,6 +178,8 @@ func (s *contactApiServer) UpdateContactV1(
 		log.Error().Err(err).Msgf("update contact with id %v failed", req.Contact.Id)
 		return &desc.UpdateContactV1Response{Updated: false}, err
 	}
+
+	metrics.UpdateCounterInc()
 
 	event := producer.EventMessage{
 		Id:        contact.Id,

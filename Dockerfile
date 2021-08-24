@@ -36,4 +36,5 @@ COPY --from=builder /home/developer/go/src/github.com/ozoncp/ocp-contact-api/bin
 COPY --from=builder /home/developer/go/src/github.com/ozoncp/ocp-contact-api/config.yml .
 RUN chown root:root ocp-contact-api
 EXPOSE 8002
+EXPOSE 9100
 CMD ["./ocp-contact-api"]
