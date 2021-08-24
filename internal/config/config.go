@@ -19,6 +19,10 @@ type Grpc struct {
 	Address string `yaml:"address"`
 }
 
+type Request struct {
+	BatchSize int `yaml:"batchsize"`
+}
+
 type Project struct {
 	Name    string `yaml:"name"`
 	Author  string `yaml:"author"`
@@ -29,6 +33,7 @@ type Config struct {
 	Project  Project  `yaml:"project"`
 	Grpc     Grpc     `yaml:"grpc"`
 	Database Database `yaml:"database"`
+	Request Request   `yaml:"request"`
 }
 
 func Read(path string) (*Config, error) {

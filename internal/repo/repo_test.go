@@ -154,4 +154,33 @@ var _ = Describe("Repo", func() {
 			Expect(actualContacts).Should(BeEquivalentTo(contacts))
 		})
 	})
+
+	Context("UpdateContact", func() {
+		When("db has contact", func() {
+			BeforeEach(func() {
+				mock.ExpectExec("UPDATE "+tableName+" SET").
+					WithArgs(contacts[2].UserId,
+						contacts[2].Type,
+						contacts[2].Text,
+						contacts[2].Id,
+					).WillReturnResult(sqlmock.NewResult(2, 1))
+			})
+
+			It("successfully updated contact and return nil", func() {
+				err := r.UpdateContact(ctx, contacts[2])
+				Expect(err).Should(BeNil())
+			})
+		})
+		When("db has no contact", func() {
+			BeforeEach(func() {
+				query := mock.ExpectExec("UPDATE "+tableName+" SET")
+				query.WithArgs(0, 0, "", 0)
+				query.WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("test error")))
+			})
+			It("remove contact and return nil", func() {
+				err := r.UpdateContact(ctx, models.Contact{})
+				Expect(err).ShouldNot(BeNil())
+			})
+		})
+	})
 })

@@ -79,6 +79,37 @@
         "tags": [
           "OcpContactApi"
         ]
+      },
+      "put": {
+        "summary": "Update contact",
+        "operationId": "OcpContactApi_UpdateContactV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiUpdateContactV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiUpdateContactV1Request"
+            }
+          }
+        ],
+        "tags": [
+          "OcpContactApi"
+        ]
       }
     },
     "/v1/contacts/{contactId}": {
@@ -209,10 +240,46 @@
         }
       }
     },
+    "apiMultiCreateContactsV1Request": {
+      "type": "object",
+      "properties": {
+        "contacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiContact"
+          }
+        }
+      }
+    },
+    "apiMultiCreateContactsV1Response": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
     "apiRemoveContactV1Response": {
       "type": "object",
       "properties": {
         "result": {
+          "type": "boolean"
+        }
+      }
+    },
+    "apiUpdateContactV1Request": {
+      "type": "object",
+      "properties": {
+        "contact": {
+          "$ref": "#/definitions/apiContact"
+        }
+      }
+    },
+    "apiUpdateContactV1Response": {
+      "type": "object",
+      "properties": {
+        "updated": {
           "type": "boolean"
         }
       }

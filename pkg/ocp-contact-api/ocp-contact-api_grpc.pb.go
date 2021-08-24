@@ -18,6 +18,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OcpContactApiClient interface {
+	// Update contact
+	UpdateContactV1(ctx context.Context, in *UpdateContactV1Request, opts ...grpc.CallOption) (*UpdateContactV1Response, error)
+	// Create list of contacts
+	MultiCreateContactsV1(ctx context.Context, in *MultiCreateContactsV1Request, opts ...grpc.CallOption) (*MultiCreateContactsV1Response, error)
 	// Returns a list of the contact
 	ListContactsV1(ctx context.Context, in *ListContactsV1Request, opts ...grpc.CallOption) (*ListContactsV1Response, error)
 	// Returns contact description by id
@@ -34,6 +38,24 @@ type ocpContactApiClient struct {
 
 func NewOcpContactApiClient(cc grpc.ClientConnInterface) OcpContactApiClient {
 	return &ocpContactApiClient{cc}
+}
+
+func (c *ocpContactApiClient) UpdateContactV1(ctx context.Context, in *UpdateContactV1Request, opts ...grpc.CallOption) (*UpdateContactV1Response, error) {
+	out := new(UpdateContactV1Response)
+	err := c.cc.Invoke(ctx, "/ocp.contact.api.OcpContactApi/UpdateContactV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ocpContactApiClient) MultiCreateContactsV1(ctx context.Context, in *MultiCreateContactsV1Request, opts ...grpc.CallOption) (*MultiCreateContactsV1Response, error) {
+	out := new(MultiCreateContactsV1Response)
+	err := c.cc.Invoke(ctx, "/ocp.contact.api.OcpContactApi/MultiCreateContactsV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *ocpContactApiClient) ListContactsV1(ctx context.Context, in *ListContactsV1Request, opts ...grpc.CallOption) (*ListContactsV1Response, error) {
@@ -76,6 +98,10 @@ func (c *ocpContactApiClient) RemoveContactV1(ctx context.Context, in *RemoveCon
 // All implementations must embed UnimplementedOcpContactApiServer
 // for forward compatibility
 type OcpContactApiServer interface {
+	// Update contact
+	UpdateContactV1(context.Context, *UpdateContactV1Request) (*UpdateContactV1Response, error)
+	// Create list of contacts
+	MultiCreateContactsV1(context.Context, *MultiCreateContactsV1Request) (*MultiCreateContactsV1Response, error)
 	// Returns a list of the contact
 	ListContactsV1(context.Context, *ListContactsV1Request) (*ListContactsV1Response, error)
 	// Returns contact description by id
@@ -91,6 +117,12 @@ type OcpContactApiServer interface {
 type UnimplementedOcpContactApiServer struct {
 }
 
+func (UnimplementedOcpContactApiServer) UpdateContactV1(context.Context, *UpdateContactV1Request) (*UpdateContactV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateContactV1 not implemented")
+}
+func (UnimplementedOcpContactApiServer) MultiCreateContactsV1(context.Context, *MultiCreateContactsV1Request) (*MultiCreateContactsV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiCreateContactsV1 not implemented")
+}
 func (UnimplementedOcpContactApiServer) ListContactsV1(context.Context, *ListContactsV1Request) (*ListContactsV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListContactsV1 not implemented")
 }
@@ -114,6 +146,42 @@ type UnsafeOcpContactApiServer interface {
 
 func RegisterOcpContactApiServer(s grpc.ServiceRegistrar, srv OcpContactApiServer) {
 	s.RegisterService(&OcpContactApi_ServiceDesc, srv)
+}
+
+func _OcpContactApi_UpdateContactV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateContactV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpContactApiServer).UpdateContactV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.contact.api.OcpContactApi/UpdateContactV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpContactApiServer).UpdateContactV1(ctx, req.(*UpdateContactV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OcpContactApi_MultiCreateContactsV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MultiCreateContactsV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpContactApiServer).MultiCreateContactsV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.contact.api.OcpContactApi/MultiCreateContactsV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpContactApiServer).MultiCreateContactsV1(ctx, req.(*MultiCreateContactsV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _OcpContactApi_ListContactsV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -195,6 +263,14 @@ var OcpContactApi_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "ocp.contact.api.OcpContactApi",
 	HandlerType: (*OcpContactApiServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "UpdateContactV1",
+			Handler:    _OcpContactApi_UpdateContactV1_Handler,
+		},
+		{
+			MethodName: "MultiCreateContactsV1",
+			Handler:    _OcpContactApi_MultiCreateContactsV1_Handler,
+		},
 		{
 			MethodName: "ListContactsV1",
 			Handler:    _OcpContactApi_ListContactsV1_Handler,

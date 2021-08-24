@@ -622,6 +622,312 @@ var _ interface {
 	ErrorName() string
 } = DescribeContactV1ResponseValidationError{}
 
+// Validate checks the field values on UpdateContactV1Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateContactV1Request) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetContact()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateContactV1RequestValidationError{
+				field:  "Contact",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateContactV1RequestValidationError is the validation error returned by
+// UpdateContactV1Request.Validate if the designated constraints aren't met.
+type UpdateContactV1RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateContactV1RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateContactV1RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateContactV1RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateContactV1RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateContactV1RequestValidationError) ErrorName() string {
+	return "UpdateContactV1RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateContactV1RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateContactV1Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateContactV1RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateContactV1RequestValidationError{}
+
+// Validate checks the field values on UpdateContactV1Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateContactV1Response) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Updated
+
+	return nil
+}
+
+// UpdateContactV1ResponseValidationError is the validation error returned by
+// UpdateContactV1Response.Validate if the designated constraints aren't met.
+type UpdateContactV1ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateContactV1ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateContactV1ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateContactV1ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateContactV1ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateContactV1ResponseValidationError) ErrorName() string {
+	return "UpdateContactV1ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateContactV1ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateContactV1Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateContactV1ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateContactV1ResponseValidationError{}
+
+// Validate checks the field values on MultiCreateContactsV1Request with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MultiCreateContactsV1Request) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if len(m.GetContacts()) < 1 {
+		return MultiCreateContactsV1RequestValidationError{
+			field:  "Contacts",
+			reason: "value must contain at least 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetContacts() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return MultiCreateContactsV1RequestValidationError{
+					field:  fmt.Sprintf("Contacts[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// MultiCreateContactsV1RequestValidationError is the validation error returned
+// by MultiCreateContactsV1Request.Validate if the designated constraints
+// aren't met.
+type MultiCreateContactsV1RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiCreateContactsV1RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiCreateContactsV1RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiCreateContactsV1RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiCreateContactsV1RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiCreateContactsV1RequestValidationError) ErrorName() string {
+	return "MultiCreateContactsV1RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiCreateContactsV1RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiCreateContactsV1Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiCreateContactsV1RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiCreateContactsV1RequestValidationError{}
+
+// Validate checks the field values on MultiCreateContactsV1Response with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MultiCreateContactsV1Response) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Count
+
+	return nil
+}
+
+// MultiCreateContactsV1ResponseValidationError is the validation error
+// returned by MultiCreateContactsV1Response.Validate if the designated
+// constraints aren't met.
+type MultiCreateContactsV1ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiCreateContactsV1ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiCreateContactsV1ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiCreateContactsV1ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiCreateContactsV1ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiCreateContactsV1ResponseValidationError) ErrorName() string {
+	return "MultiCreateContactsV1ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiCreateContactsV1ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiCreateContactsV1Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiCreateContactsV1ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiCreateContactsV1ResponseValidationError{}
+
 // Validate checks the field values on Contact with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
 func (m *Contact) Validate() error {

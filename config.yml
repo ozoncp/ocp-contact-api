@@ -14,3 +14,6 @@ database:
   database: "postgres"
   ssl: "disable"
   driver: "postgres"
+
+request:
+  batchsize: 5

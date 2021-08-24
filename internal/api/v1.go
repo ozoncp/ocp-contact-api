@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ozoncp/ocp-contact-api/internal/models"
 	"github.com/ozoncp/ocp-contact-api/internal/repo"
+	"github.com/ozoncp/ocp-contact-api/internal/utils"
 	desc "github.com/ozoncp/ocp-contact-api/pkg/ocp-contact-api"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -13,12 +14,13 @@ import (
 
 type contactApiServer struct {
 	repo repo.Repo
+	batchSize int
 	log zerolog.Logger
 	desc.UnimplementedOcpContactApiServer
 }
 
-func NewOcpContactApiServer(repo repo.Repo, log zerolog.Logger) desc.OcpContactApiServer {
-	return &contactApiServer{repo: repo, log: log}
+func NewOcpContactApiServer(repo repo.Repo, batchSize int, log zerolog.Logger) desc.OcpContactApiServer {
+	return &contactApiServer{repo: repo, batchSize: batchSize, log: log}
 }
 
 func (s *contactApiServer) ListContactsV1(
@@ -128,4 +130,53 @@ func (s *contactApiServer) RemoveContactV1(
 
 	s.log.Info().Msgf("remove contact with id %v was removed", req.ContactId)
 	return &desc.RemoveContactV1Response{Result: true}, nil
+}
+
+func (s *contactApiServer) UpdateContactV1(
+	ctx context.Context,
+	req *desc.UpdateContactV1Request,
+) (*desc.UpdateContactV1Response, error) {
+	contact := models.Contact{Id: req.Contact.Id, UserId: req.Contact.UserId,
+		Type: req.Contact.Type, Text: req.Contact.Text}
+
+	if err := s.repo.UpdateContact(ctx, contact); err != nil {
+		log.Error().Err(err).Msgf("update contact with id %v failed", req.Contact.Id)
+		return &desc.UpdateContactV1Response{Updated: false}, err
+	}
+
+	return &desc.UpdateContactV1Response{Updated: true}, nil
+}
+
+func (s *contactApiServer) MultiCreateContactsV1(
+	ctx context.Context,
+	req *desc.MultiCreateContactsV1Request,
+) (*desc.MultiCreateContactsV1Response, error) {
+	if err := req.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	contacts := make([]models.Contact, 0, len(req.Contacts))
+
+	for _, req := range req.Contacts {
+		contact := models.Contact{UserId: req.UserId, Type: req.Type, Text: req.Text}
+		contacts = append(contacts, contact)
+	}
+
+	batches, err := utils.Split(contacts, s.batchSize)
+	if err != nil {
+		log.Error().Err(err).Msgf("multiple contacts creation failed")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var count uint64
+	for _, batch := range batches {
+		if err := s.repo.AddContacts(ctx, batch); err != nil {
+			log.Error().Err(err).Msgf("multiple contacts creation failed while adding in repo")
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		count += uint64(len(batch))
+	}
+	return &desc.MultiCreateContactsV1Response{
+		Count: count,
+	}, nil
 }

@@ -46,7 +46,7 @@ func runGrpc(config *config.Config, log zerolog.Logger) error {
 	// start Grpc server
 	s := grpc.NewServer()
 	newRepo := repo.NewRepo(db)
-	desc.RegisterOcpContactApiServer(s, api.NewOcpContactApiServer(newRepo, log))
+	desc.RegisterOcpContactApiServer(s, api.NewOcpContactApiServer(newRepo, config.Request.BatchSize, log))
 
 	if err := s.Serve(listen); err != nil {
 		log.Fatal().Err(err).Msgf("failed to serve: %v", err)

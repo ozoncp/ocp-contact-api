@@ -9,6 +9,22 @@ option go_package = "github.com/ozoncp/ocp-contact-api/pkg/ocp-contact-api;ocp_c
 
 service OcpContactApi {
 
+  // Update contact
+  rpc UpdateContactV1(UpdateContactV1Request) returns (UpdateContactV1Response) {
+    option (google.api.http) = {
+      put: "/v1/contacts"
+      body: "*"
+    };
+  }
+
+  // Create list of contacts
+  rpc MultiCreateContactsV1(MultiCreateContactsV1Request) returns (MultiCreateContactsV1Response) {
+    option (google.api.http) = {
+      post: "/v1/contacts"
+      body: "*"
+    };
+  }
+
   // Returns a list of the contact
   rpc ListContactsV1(ListContactsV1Request) returns (ListContactsV1Response) {
     option (google.api.http) = {
@@ -72,6 +88,22 @@ message DescribeContactV1Request {
 
 message DescribeContactV1Response {
   Contact contact = 1;
+}
+
+message UpdateContactV1Request {
+  Contact contact = 1;
+}
+
+message UpdateContactV1Response {
+  bool updated = 1;
+}
+
+message MultiCreateContactsV1Request {
+  repeated Contact contacts = 1 [(validate.rules).repeated.min_items = 1];
+}
+
+message MultiCreateContactsV1Response {
+  uint64 count = 1;
 }
 
 message Contact {
