@@ -3,22 +3,33 @@ package api
 import (
 	"context"
 	"github.com/ozoncp/ocp-contact-api/internal/models"
+	"github.com/ozoncp/ocp-contact-api/internal/producer"
 	"github.com/ozoncp/ocp-contact-api/internal/repo"
+	"github.com/ozoncp/ocp-contact-api/internal/utils"
+	"github.com/ozoncp/ocp-contact-api/internal/metrics"
 	desc "github.com/ozoncp/ocp-contact-api/pkg/ocp-contact-api"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"time"
 )
 
 type contactApiServer struct {
 	repo repo.Repo
+	prod producer.Producer
+	batchSize int
 	log zerolog.Logger
 	desc.UnimplementedOcpContactApiServer
 }
 
-func NewOcpContactApiServer(repo repo.Repo, log zerolog.Logger) desc.OcpContactApiServer {
-	return &contactApiServer{repo: repo, log: log}
+func NewOcpContactApiServer(
+	repo repo.Repo,
+	prod producer.Producer,
+	batchSize int,
+	log zerolog.Logger,
+) desc.OcpContactApiServer {
+	return &contactApiServer{repo: repo, prod: prod, batchSize: batchSize, log: log}
 }
 
 func (s *contactApiServer) ListContactsV1(
@@ -96,7 +107,7 @@ func (s *contactApiServer) CreateContactV1(
 	contactId, err := s.repo.CreateContact(context, contact)
 
 	if err != nil {
-		log.Error().Err(err).Msg("create contact failed")
+		s.log.Error().Err(err).Msg("create contact failed")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -105,6 +116,19 @@ func (s *contactApiServer) CreateContactV1(
 	}
 
 	s.log.Info().Msgf("contact was created with id: %v", contactId)
+
+	metrics.CreateCounterInc()
+
+	event := producer.EventMessage{
+		Id:        contact.Id,
+		Action:    producer.Create.String(),
+		Timestamp: time.Now().Unix(),
+	}
+
+	msg := producer.CreateMessage(producer.Create, event)
+	if err = s.prod.Send(msg); err != nil {
+		s.log.Error().Err(err).Msgf("failed send message to kafka")
+	}
 
 	return response, nil
 }
@@ -127,5 +151,79 @@ func (s *contactApiServer) RemoveContactV1(
 	}
 
 	s.log.Info().Msgf("remove contact with id %v was removed", req.ContactId)
+
+	metrics.RemoveCounterInc()
+
+	event := producer.EventMessage{
+		Id:        req.ContactId,
+		Action:    producer.Remove.String(),
+		Timestamp: time.Now().Unix(),
+	}
+	msg := producer.CreateMessage(producer.Remove, event)
+	if err := s.prod.Send(msg); err != nil {
+		s.log.Error().Err(err).Msgf("failed send message to kafka")
+	}
+
 	return &desc.RemoveContactV1Response{Result: true}, nil
+}
+
+func (s *contactApiServer) UpdateContactV1(
+	ctx context.Context,
+	req *desc.UpdateContactV1Request,
+) (*desc.UpdateContactV1Response, error) {
+	contact := models.Contact{Id: req.Contact.Id, UserId: req.Contact.UserId,
+		Type: req.Contact.Type, Text: req.Contact.Text}
+
+	if err := s.repo.UpdateContact(ctx, contact); err != nil {
+		log.Error().Err(err).Msgf("update contact with id %v failed", req.Contact.Id)
+		return &desc.UpdateContactV1Response{Updated: false}, err
+	}
+
+	metrics.UpdateCounterInc()
+
+	event := producer.EventMessage{
+		Id:        contact.Id,
+		Action:    producer.Update.String(),
+		Timestamp: time.Now().Unix(),
+	}
+	msg := producer.CreateMessage(producer.Update, event)
+	if err := s.prod.Send(msg); err != nil {
+		s.log.Error().Err(err).Msgf("failed send message to kafka")
+	}
+
+	return &desc.UpdateContactV1Response{Updated: true}, nil
+}
+
+func (s *contactApiServer) MultiCreateContactsV1(
+	ctx context.Context,
+	req *desc.MultiCreateContactsV1Request,
+) (*desc.MultiCreateContactsV1Response, error) {
+	if err := req.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	contacts := make([]models.Contact, 0, len(req.Contacts))
+
+	for _, req := range req.Contacts {
+		contact := models.Contact{UserId: req.UserId, Type: req.Type, Text: req.Text}
+		contacts = append(contacts, contact)
+	}
+
+	batches, err := utils.Split(contacts, s.batchSize)
+	if err != nil {
+		log.Error().Err(err).Msgf("multiple contacts creation failed")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var count uint64
+	for _, batch := range batches {
+		if err := s.repo.AddContacts(ctx, batch); err != nil {
+			log.Error().Err(err).Msgf("multiple contacts creation failed while adding in repo")
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		count += uint64(len(batch))
+	}
+	return &desc.MultiCreateContactsV1Response{
+		Count: count,
+	}, nil
 }

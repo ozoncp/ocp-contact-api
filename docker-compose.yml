@@ -18,10 +18,45 @@ services:
     restart: unless-stopped
     depends_on:
       - postgres
+      - kafka
     links:
       - postgres
     ports:
       - "8002:8002" # grpc
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka
+    container_name: kafka
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_LISTENERS-INTERNAL: //kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_ADVERTISED: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    restart: on-failure
+
+  prometheus:
+    image: prom/prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
 
 volumes:
   pgdata:

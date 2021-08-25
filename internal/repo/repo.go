@@ -33,6 +33,7 @@ type Repo interface {
 	DescribeContact(ctx context.Context, contactId uint64) (*models.Contact, error)
 	CreateContact(ctx context.Context, contact models.Contact) (uint64, error)
 	RemoveContact(ctx context.Context, contactId uint64) error
+	UpdateContact(ctx context.Context, contact models.Contact) error
 }
 
 type repo struct {
@@ -160,6 +161,32 @@ func (r *repo) RemoveContact(ctx context.Context, contactId uint64) error {
 
 	if rowsAffected <= 0 {
 		return fmt.Errorf("remove contact failed: contact with id %v not found", contactId)
+	}
+
+	return nil
+}
+
+func (r *repo) UpdateContact(ctx context.Context, contact models.Contact) error {
+	query := squirrel.Update(contactTable).
+		Set("user_id", contact.UserId).
+		Set("type", contact.Type).
+		Set("text", contact.Text).
+		Where(squirrel.Eq{"id": contact.Id}).
+		RunWith(r.db).
+		PlaceholderFormat(squirrel.Dollar)
+
+	exec, err := query.ExecContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := exec.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected <= 0 {
+		return fmt.Errorf("update contact failed: contact with id %v not found", contact.Id)
 	}
 
 	return nil

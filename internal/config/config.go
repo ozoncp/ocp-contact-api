@@ -19,16 +19,33 @@ type Grpc struct {
 	Address string `yaml:"address"`
 }
 
+type Request struct {
+	BatchSize int `yaml:"batchsize"`
+}
+
 type Project struct {
 	Name    string `yaml:"name"`
 	Author  string `yaml:"author"`
 	Version string `yaml:"version"`
 }
 
+type Kafka struct {
+	Topic   string   `yaml:"topic"`
+	Brokers []string `yaml:"brokers"`
+}
+
+type Prometheus struct {
+	Uri  string `yaml:"uri"`
+	Port string `yaml:"port"`
+}
+
 type Config struct {
 	Project  Project  `yaml:"project"`
 	Grpc     Grpc     `yaml:"grpc"`
 	Database Database `yaml:"database"`
+	Request  Request  `yaml:"request"`
+	Kafka    Kafka    `yaml:"kafka"`
+	Prometheus Prometheus `yaml:"prometheus"`
 }
 
 func Read(path string) (*Config, error) {

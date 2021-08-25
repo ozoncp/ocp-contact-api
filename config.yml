@@ -14,3 +14,15 @@ database:
   database: "postgres"
   ssl: "disable"
   driver: "postgres"
+
+request:
+  batchsize: 5
+
+prometheus:
+  uri: "/metrics"
+  port: ":9100"
+
+kafka:
+  topic: "contact"
+  brokers:
+    - "kafka:9092"
